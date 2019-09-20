@@ -29,6 +29,7 @@ if __name__ == '__main__':
     try:
         if sys.argv[1] == 'test':
             test_mode = True
+            order_num = None
         else:
             order_num = int(sys.argv[1])
     except (IndexError, ValueError):
