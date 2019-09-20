@@ -46,6 +46,9 @@ if __name__ == '__main__':
         process_order(order)
     elif test_mode:
         print('Testing JobBOSS Connection')
+        print('Host:', common.JOBBOSS_CONFIG.host)
+        print('Database:', common.JOBBOSS_CONFIG.name)
+        print('Username:', common.JOBBOSS_CONFIG.user)
         from jobboss.models import Job
         c = Job.objects.count()
         print('Job count: {} OK!'.format(c))
