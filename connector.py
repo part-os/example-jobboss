@@ -1,10 +1,13 @@
 import sys
-from common import PAPERLESS_CONFIG, logger
+import common
+from common import logger
 from paperless.client import PaperlessClient
 from paperless.listeners import OrderListener
 from paperless.main import PaperlessSDK
 from paperless.objects.orders import Order
 from job import process_order
+
+common.configure()
 
 
 class MyOrderListener(OrderListener):
@@ -15,8 +18,8 @@ class MyOrderListener(OrderListener):
 
 def main():
     PaperlessClient(
-        access_token=PAPERLESS_CONFIG.token,
-        group_slug=PAPERLESS_CONFIG.slug
+        access_token=common.PAPERLESS_CONFIG.token,
+        group_slug=common.PAPERLESS_CONFIG.slug
     )
     my_sdk = PaperlessSDK(loop=False)
     listener = MyOrderListener()
@@ -36,8 +39,8 @@ if __name__ == '__main__':
         order_num = None
     if order_num is not None:
         PaperlessClient(
-            access_token=PAPERLESS_CONFIG.token,
-            group_slug=PAPERLESS_CONFIG.slug
+            access_token=common.PAPERLESS_CONFIG.token,
+            group_slug=common.PAPERLESS_CONFIG.slug
         )
         order = Order.get(order_num)
         process_order(order)
@@ -47,7 +50,7 @@ if __name__ == '__main__':
         c = Job.objects.count()
         print('Job count: {} OK!'.format(c))
     else:
-        if PAPERLESS_CONFIG.active:
+        if common.PAPERLESS_CONFIG.active:
             logger.info('Running connector!')
             main()
         else:
