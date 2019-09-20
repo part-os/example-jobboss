@@ -4,7 +4,7 @@ from logging.handlers import TimedRotatingFileHandler
 import os
 import sys
 
-CONFIG_PATH = 'paperless.ini'
+CONFIG_PATH = 'config.ini'
 PAPERLESS_CONFIG = None
 JOBBOSS_CONFIG = None
 
@@ -37,39 +37,47 @@ class JobBOSSConfig:
         self.import_operations = bool(kwargs.get('import_operations'))
 
 
-logger.info('Reading configuration file')
-parser = configparser.ConfigParser()
-parser.read('paperless.ini')
+def configure(test_mode=False):
+    global PAPERLESS_CONFIG
+    global JOBBOSS_CONFIG
+    logger.info('Reading configuration file')
+    parser = configparser.ConfigParser()
+    if test_mode:
+        parser.read('config.example.ini')
+    else:
+        parser.read(CONFIG_PATH)
 
-PAPERLESS_CONFIG = PaperlessConfig(
-    token=parser['Paperless']['token'],
-    slug=parser['Paperless']['slug'],
-    logpath=parser['Paperless']['logpath'],
-    active=bool(int(parser['Paperless']['active']))
-)
-fh = TimedRotatingFileHandler(
-    PAPERLESS_CONFIG.logpath,
-    backupCount=30,
-    when='midnight',
-    interval=1
-)
-fh.suffix = '%Y-%m-%d'
-fh.setFormatter(f)
-fh.setLevel(logging.INFO)
-logger.addHandler(fh)
+    PAPERLESS_CONFIG = PaperlessConfig(
+        token=parser['Paperless']['token'],
+        slug=parser['Paperless']['slug'],
+        logpath=parser['Paperless']['logpath'],
+        active=bool(int(parser['Paperless']['active']))
+    )
+    fh = TimedRotatingFileHandler(
+        PAPERLESS_CONFIG.logpath,
+        backupCount=30,
+        when='midnight',
+        interval=1
+    )
+    fh.suffix = '%Y-%m-%d'
+    fh.setFormatter(f)
+    fh.setLevel(logging.INFO)
+    logger.addHandler(fh)
 
-JOBBOSS_CONFIG = JobBOSSConfig(
-    host=parser['JobBOSS']['host'],
-    name=parser['JobBOSS']['name'],
-    user=parser['JobBOSS']['user'],
-    password=parser['JobBOSS']['password'],
-    paperless_user=parser['JobBOSS']['paperless_user'],
-    sales_code=parser['JobBOSS']['sales_code'],
-    import_material=parser['JobBOSS']['import_material'],
-    default_location=parser['JobBOSS']['default_location'],
-    import_operations=parser['JobBOSS']['import_operations'],
-)
-os.environ.setdefault('JOBBOSS_DB_HOST', JOBBOSS_CONFIG.host)
-os.environ.setdefault('JOBBOSS_DB_NAME', JOBBOSS_CONFIG.name)
-os.environ.setdefault('JOBBOSS_DB_USERNAME', JOBBOSS_CONFIG.user)
-os.environ.setdefault('JOBBOSS_DB_PASSWORD', JOBBOSS_CONFIG.password)
+    JOBBOSS_CONFIG = JobBOSSConfig(
+        host=parser['JobBOSS']['host'],
+        name=parser['JobBOSS']['name'],
+        user=parser['JobBOSS']['user'],
+        password=parser['JobBOSS']['password'],
+        paperless_user=parser['JobBOSS']['paperless_user'],
+        sales_code=parser['JobBOSS']['sales_code'],
+        import_material=parser['JobBOSS']['import_material'],
+        default_location=parser['JobBOSS']['default_location'],
+        import_operations=parser['JobBOSS']['import_operations'],
+    )
+    os.environ.setdefault('JOBBOSS_DB_HOST', JOBBOSS_CONFIG.host)
+    os.environ.setdefault('JOBBOSS_DB_NAME', JOBBOSS_CONFIG.name)
+    os.environ.setdefault('JOBBOSS_DB_USERNAME', JOBBOSS_CONFIG.user)
+    os.environ.setdefault('JOBBOSS_DB_PASSWORD', JOBBOSS_CONFIG.password)
+    if test_mode:
+        os.environ.setdefault('JOBBOSS_TEST', '1')

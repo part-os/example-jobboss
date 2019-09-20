@@ -2,21 +2,14 @@ import attr
 import datetime
 import uuid
 from itertools import chain
-from common import logger, JOBBOSS_CONFIG
+from common import logger
+import common
 from paperless.objects.orders import Order
 import jobboss.models as jb
 from jobboss.query.customer import get_or_create_customer, \
     get_or_create_contact, get_or_create_address
 from jobboss.query.job import get_material, get_work_center, \
     get_default_work_center
-
-PAPERLESS_USER = JOBBOSS_CONFIG.paperless_user \
-    if JOBBOSS_CONFIG.paperless_user else None
-SALES_CODE = JOBBOSS_CONFIG.sales_code
-IMPORT_MATERIAL = JOBBOSS_CONFIG.import_material
-DEFAULT_LOCATION = JOBBOSS_CONFIG.default_location \
-    if JOBBOSS_CONFIG.default_location else None
-IMPORT_OPERATIONS = JOBBOSS_CONFIG.import_operations
 
 
 def get_wc(name):
@@ -28,6 +21,15 @@ def get_wc(name):
 
 
 def process_order(order: Order):
+
+    paperless_user = common.JOBBOSS_CONFIG.paperless_user \
+        if common.JOBBOSS_CONFIG.paperless_user else None
+    sales_code = common.JOBBOSS_CONFIG.sales_code
+    import_material = common.JOBBOSS_CONFIG.import_material
+    default_location = common.JOBBOSS_CONFIG.default_location \
+        if common.JOBBOSS_CONFIG.default_location else None
+    import_operations = common.JOBBOSS_CONFIG.import_operations
+
     logger.info('Processing order {}'.format(order.number))
     # get customer, bill to info, ship to info
     if order.customer.company:
@@ -79,7 +81,7 @@ def process_order(order: Order):
         customer=customer.customer,
         ship_to=ship_to.address,
         contact=contact.contact,
-        order_taken_by=PAPERLESS_USER,
+        order_taken_by=paperless_user,
         ship_via=customer.ship_via,
         terms=terms,
         sales_tax_amt=0,
@@ -147,7 +149,7 @@ def process_order(order: Order):
         # get or create material master
         if not comp.part_number:
             material_name = None
-        elif IMPORT_MATERIAL:
+        elif import_material:
             material = get_material(comp.part_number)
             if material:
                 logger.info('Found matching material')
@@ -167,9 +169,9 @@ def process_order(order: Order):
                     material=comp.part_number,
                     description=desc,
                     ext_description=ext_desc,
-                    sales_code=SALES_CODE,
+                    sales_code=sales_code,
                     rev=comp.revision,
-                    location_id=DEFAULT_LOCATION,
+                    location_id=default_location,
                     type='F',
                     status='Active',
                     pick_buy_indicator='P',
@@ -208,7 +210,7 @@ def process_order(order: Order):
             ship_to=ship_to.address,
             contact=contact.contact,
             terms=terms,
-            sales_code=SALES_CODE,
+            sales_code=sales_code,
             type='Regular',
             order_date=today,
             status='Active',
@@ -392,7 +394,7 @@ def process_order(order: Order):
             taxable=False,
             commissionable=bool(commission_pct),
             commission_pct=commission_pct,
-            sales_code=SALES_CODE,
+            sales_code=sales_code,
             note_text='\n\n'.join(notes),
             promised_date=order_item.ships_on_dt,
             last_updated=now,
@@ -427,7 +429,7 @@ def process_order(order: Order):
         logger.info('Created delivery {}'.format(delivery.delivery))
 
         # now insert routing for operations
-        if IMPORT_OPERATIONS:
+        if import_operations:
             for j, op in enumerate(comp.shop_operations):
                 runtime = op.runtime if op.runtime is not None else 0
                 setup_time = op.setup_time if op.setup_time is not None else 0

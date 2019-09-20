@@ -24,19 +24,9 @@ First install the latest [Python3](https://www.python.org/downloads/), which
 includes `python3`, `pip`, and `venv`. Add the Python installation folder to
 your system path.
 
-Next create a folder for your project. In these instructions, we will assume your folder is `C:\partos`. In this folder, clone this repository using [Git for Windows](https://git-scm.com/download/win) and initialize submodules.
+Next create a folder for your project. In these instructions, we will assume your folder is `C:\partos`. In this folder, clone this repository using [Git for Windows](https://git-scm.com/download/win).
 
-In your project folder, create a virtual environment and activate it. To do this, open up a command prompt and run these commands:
-
-    cd \partos
-    python -m venv osenv
-    osenv\Scripts\activate
-
-Install the required Python packages:
-
-    cd example-jobboss
-    pip install -r core-python\requirements.txt
-    pip install -r jobboss-python\requirements.txt
+The repository contains an installation script that will initialize submodules, create a virtual environment, and install all dependencies. Run `install.bat` from the command line to install the connector.
 
 ### Configure the Connector
 
@@ -79,7 +69,7 @@ On a Windows 10 system, the easiest way to run the connector at regular interval
 Usage
 -----
 
-The connector can be called in two ways.
+The connector can be called in three ways.
 
 In the normal operating mode, it will check for new orders, import any orders found, and quit. This is the mode that is used when scheduling the connector to run at regular intervals via `launch.bat`. In this mode, no command line arguments are needed:
 
@@ -88,3 +78,9 @@ In the normal operating mode, it will check for new orders, import any orders fo
 To import one particular order number, simply provide the integer order number as a single command line argument. For example, to import Order #123:
 
     python connector.py 123
+
+To simply test your JobBOSS connection, run in test mode:
+
+    python connector.py test
+
+This will print the number of jobs in the database in order to verify database access.

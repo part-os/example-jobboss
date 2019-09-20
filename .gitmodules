@@ -1,0 +1,6 @@
+[submodule "jobboss-python"]
+	path = jobboss-python
+	url = https://github.com/part-os/jobboss-python.git
+[submodule "core-python"]
+	path = core-python
+	url = https://github.com/part-os/core-python.git
