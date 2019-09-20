@@ -5,14 +5,13 @@ from paperless.client import PaperlessClient
 from paperless.listeners import OrderListener
 from paperless.main import PaperlessSDK
 from paperless.objects.orders import Order
-
 common.configure()
+from job import process_order
 
 
 class MyOrderListener(OrderListener):
     def on_event(self, resource):
         if resource.status != 'cancelled':
-            from job import process_order
             process_order(resource)
 
 
@@ -30,7 +29,7 @@ def main():
 if __name__ == '__main__':
     test_mode = False
     try:
-        if sys.argv[1] == 'test':
+        if sys.argv[1] == 'testmode':
             test_mode = True
             order_num = None
         else:
@@ -43,7 +42,6 @@ if __name__ == '__main__':
             group_slug=common.PAPERLESS_CONFIG.slug
         )
         order = Order.get(order_num)
-        from job import process_order
         process_order(order)
     elif test_mode:
         print('Testing JobBOSS Connection')
