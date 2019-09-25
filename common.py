@@ -32,9 +32,9 @@ class JobBOSSConfig:
         self.password = kwargs.get('password')
         self.paperless_user = kwargs.get('paperless_user')
         self.sales_code = kwargs.get('sales_code')
-        self.import_material = bool(kwargs.get('import_material'))
+        self.import_material = bool(int(kwargs.get('import_material')))
         self.default_location = kwargs.get('default_location')
-        self.import_operations = bool(kwargs.get('import_operations'))
+        self.import_operations = bool(int(kwargs.get('import_operations')))
 
 
 def configure(test_mode=False):
