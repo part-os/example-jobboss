@@ -437,7 +437,7 @@ def process_order(order: Order):
                 job_op = jb.JobOperation(
                     job=job,
                     sequence=j,
-                    description=op.name,
+                    description=op.name[0:25] if op.name else op.name,
                     priority=5,
                     run_method='Min/Part',
                     run=runtime * 60,
