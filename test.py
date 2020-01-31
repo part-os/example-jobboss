@@ -45,7 +45,10 @@ class ConnectorTest(unittest.TestCase):
         client.get_resource = MagicMock(return_value=mock_order_json)
         order = Order.get(1)
         process_order(order)
-        self.assertEqual(11, jb.Job.objects.count())
+        self.assertEqual(len(order.order_items), jb.Job.objects.count())
+        op_count = sum(len(oi.root_component.shop_operations) for oi in order.order_items)
+        addon_count = sum(len(oi.ordered_add_ons) for oi in order.order_items)
+        self.assertEqual(op_count + addon_count, jb.JobOperation.objects.count())
 
 
 if __name__ == '__main__':

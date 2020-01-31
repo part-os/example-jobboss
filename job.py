@@ -4,7 +4,7 @@ import uuid
 from itertools import chain
 from common import logger
 import common
-from paperless.objects.orders import Order
+from paperless.objects.orders import Order, Component, Operation, AddOn
 import jobboss.models as jb
 from jobboss.query.customer import get_or_create_customer, \
     get_or_create_contact, get_or_create_address
@@ -21,7 +21,6 @@ def get_wc(name):
 
 
 def process_order(order: Order):
-
     paperless_user = common.JOBBOSS_CONFIG.paperless_user \
         if common.JOBBOSS_CONFIG.paperless_user else None
     sales_code = common.JOBBOSS_CONFIG.sales_code
@@ -133,7 +132,7 @@ def process_order(order: Order):
     for i, order_item in enumerate(order.order_items):
         logger.debug('Starting order item {}'.format(i))
 
-        comp = order_item.components[0]
+        comp: Component = order_item.root_component
 
         if comp.description:
             if len(comp.description) <= 30:
@@ -430,9 +429,17 @@ def process_order(order: Order):
 
         # now insert routing for operations
         if import_operations:
-            for j, op in enumerate(comp.shop_operations):
-                runtime = op.runtime if op.runtime is not None else 0
-                setup_time = op.setup_time if op.setup_time is not None else 0
+            operations_list = comp.shop_operations
+            if comp.is_root_component:
+                operations_list = operations_list + order_item.ordered_add_ons
+            for j, op in enumerate(operations_list):
+                runtime = 0
+                setup_time = 0
+                notes = None
+                if isinstance(op, Operation):
+                    runtime = op.runtime if op.runtime is not None else 0
+                    setup_time = op.setup_time if op.setup_time is not None else 0
+                    notes = op.notes
                 logger.debug('Creating operation {}'.format(j))
                 job_op = jb.JobOperation(
                     job=job,
@@ -494,7 +501,7 @@ def process_order(order: Order):
                     rwk_machine_burden=0,
                     rwk_ga_burden=0,
                     rwk_scrap_qty=0,
-                    note_text=op.notes,
+                    note_text=notes,
                     last_updated=now,
                     act_run_labor_hrs=0,
                     setup_qty=0,
