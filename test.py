@@ -19,6 +19,7 @@ import unittest
 from unittest.mock import MagicMock
 import common
 import json
+from django.db.models import F
 from paperless.client import PaperlessClient
 from paperless.objects.orders import Order
 
@@ -45,8 +46,18 @@ class ConnectorTest(unittest.TestCase):
         client.get_resource = MagicMock(return_value=mock_order_json)
         order = Order.get(1)
         process_order(order)
-        self.assertEqual(len(order.order_items), jb.Job.objects.count())
-        op_count = sum(len(oi.root_component.shop_operations) for oi in order.order_items)
+        self.assertEqual(
+            len(order.order_items),
+            jb.Job.objects.filter(job=F('top_lvl_job')).count()
+        )
+        self.assertEqual(
+            sum([len(oi.components) for oi in order.order_items]),
+            jb.Job.objects.count()
+        )
+        op_count = 0
+        for oi in order.order_items:
+            for comp in oi.components:
+                op_count += len(comp.shop_operations)
         addon_count = sum(len(oi.ordered_add_ons) for oi in order.order_items)
         self.assertEqual(op_count + addon_count, jb.JobOperation.objects.count())
 
