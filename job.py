@@ -33,10 +33,12 @@ def process_order(order: Order):
     # get customer, bill to info, ship to info
     if order.customer.company:
         business_name = order.customer.company.business_name
+        code = order.customer.company.erp_code
     else:
         business_name = '{}, {}'.format(order.customer.last_name,
                                         order.customer.first_name)
-    customer: jb.Customer = get_or_create_customer(business_name)
+        code = None
+    customer: jb.Customer = get_or_create_customer(business_name, code)
     bill_name = '{} {}'.format(order.billing_info.first_name,
                                order.billing_info.last_name)
     contact: jb.Contact = get_or_create_contact(customer, bill_name)
