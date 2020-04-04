@@ -4,7 +4,8 @@ import uuid
 from itertools import chain
 from common import logger
 import common
-from paperless.objects.orders import Order, Component, Operation, AddOn
+from paperless.objects.components import Operation
+from paperless.objects.orders import Order, OrderComponent
 import jobboss.models as jb
 from jobboss.query.customer import get_or_create_customer, \
     get_or_create_contact, get_or_create_address
@@ -140,7 +141,7 @@ def process_order(order: Order):
         comp_job = {}  # component ID -> JB job instance
 
         for assm_comp in order_item.iterate_assembly():
-            comp = assm_comp.component
+            comp: OrderComponent = assm_comp.component
             if comp.description:
                 if len(comp.description) <= 30:
                     desc = comp.description
