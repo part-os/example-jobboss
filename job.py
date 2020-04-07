@@ -140,8 +140,12 @@ def process_order(order: Order):
         comp_uuid = {}  # component ID -> JB object ID
         comp_job = {}  # component ID -> JB job instance
 
+        # create jobs for each mfg component and assembly
         for assm_comp in order_item.iterate_assembly():
             comp: OrderComponent = assm_comp.component
+            # skip hardware, add those components later
+            if comp.is_hardware:
+                continue
             if comp.description:
                 if len(comp.description) <= 30:
                     desc = comp.description
@@ -569,3 +573,100 @@ def process_order(order: Order):
                     job_op.save()
                     logger.info('Saved operation {} {} {}'.format(
                         j, job_op.work_center, job_op.vendor))
+
+        # add hardware items as MaterialReqs
+        comp: OrderComponent
+        for comp in order_item.components:
+            if not comp.is_hardware:
+                continue
+            material = get_material(comp.part_number)
+            if material:
+                logger.info('Found matching hardware material')
+                material_name = material.material
+            else:
+                if import_material:
+                    logger.info('Creating hardware Material {}'.format(
+                        comp.part_number))
+                    material = jb.Material.objects.create(
+                        material=comp.part_number,
+                        description=comp.description[0:30] if comp.description else None,
+                        sales_code=sales_code,
+                        rev=comp.revision,
+                        location_id=default_location,
+                        type='H',
+                        status='Active',
+                        pick_buy_indicator='B',
+                        stocked_uofm='ea',
+                        purchase_uofm='ea',
+                        cost_uofm='ea',
+                        price_uofm='ea',
+                        standard_cost=0.0,
+                        reorder_qty=0,
+                        lead_days=0,
+                        uofm_conv_factor=1,
+                        lot_trace=False,
+                        rd_whole_unit=False,
+                        make_buy='B',
+                        use_price_breaks=True,
+                        last_updated=datetime.datetime.utcnow(),
+                        taxable=False,
+                        affects_schedule=False,
+                        tooling=False,
+                        isserialized=False,
+                        objectid=uuid.uuid4()
+                    )
+                    material_name = material.material
+                else:
+                    material_name = comp.part_number
+                    logger.info('No hardware material for {}'.format(
+                        comp.part_number))
+
+            for parent_id in comp.parent_ids:
+                job = comp_job[parent_id]
+                qty_per = None
+                parent = order_item.get_component(parent_id)
+                for child in parent.children:
+                    if child.child_id == comp.id:
+                        qty_per = child.quantity
+                        break
+                jb.MaterialReq.objects.create(
+                    job=job,
+                    material=material_name,
+                    description=comp.description[0:30] if comp.description else material_name,
+                    pick_buy_indicator='B',
+                    type='H',
+                    status='O',
+                    quantity_per_basis='I',
+                    quantity_per=qty_per,
+                    uofm='ea',
+                    deferred_qty=0,
+                    est_qty=comp.make_quantity,
+                    est_unit_cost=0,
+                    est_addl_cost=0,
+                    est_total_cost=0,
+                    act_qty=0,
+                    act_unit_cost=0,
+                    act_total_cost=0,
+                    part_length=0,
+                    part_width=0,
+                    bar_end=0,
+                    facing=0,
+                    bar_length=0,
+                    lead_days=0,
+                    currency_conv_rate=1,
+                    trade_currency=1,
+                    fixed_rate=1,
+                    trade_date=today,
+                    certs_required=0,
+                    manual_link=1,
+                    last_updated=now,
+                    cost_uofm='ea',
+                    cost_unit_conv=1,
+                    quantity_multiplier=1,
+                    partial_res=0,
+                    objectid=str(uuid.uuid4()),
+                    job_oid=job.objectid,
+                    affects_schedule=0,
+                    material_oid=material.objectid if material else None,
+                    rounded=1,
+                )

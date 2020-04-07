@@ -51,7 +51,8 @@ class ConnectorTest(unittest.TestCase):
             jb.Job.objects.filter(job=F('top_lvl_job')).count()
         )
         self.assertEqual(
-            sum([len(oi.components) for oi in order.order_items]),
+            sum([len([comp for comp in oi.components if not comp.is_hardware])
+                 for oi in order.order_items]),
             jb.Job.objects.count()
         )
         op_count = 0
