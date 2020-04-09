@@ -508,7 +508,7 @@ def process_order(order: Order):
                         est_unit_cost=0,
                         est_addl_cost=0,
                         est_total_cost=0,
-                        deferred_qty=0,
+                        deferred_qty=comp.make_quantity,
                         act_setup_hrs=0,
                         act_run_hrs=0,
                         act_run_qty=0,
