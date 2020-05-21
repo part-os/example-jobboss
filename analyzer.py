@@ -47,6 +47,11 @@ def export_ops():
         w.writerow(('Work Center', 'Operation'))
         for operation in jb.Operation.objects.all():
             w.writerow((operation.work_center.work_center, operation.operation))
+    with open('/tmp/report/wc.csv', 'w') as f:
+        w = csv.writer(f)
+        w.writerow(('Work Center',))
+        for wc in jb.WorkCenter.objects.all():
+            w.writerow((wc.work_center,))
     with open('/tmp/report/vend_svc.csv', 'w') as f:
         w = csv.writer(f)
         w.writerow(('Vendor', 'Service', 'Description'))
