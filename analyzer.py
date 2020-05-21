@@ -30,7 +30,7 @@ def get_database_names():
 
 def get_sales_codes():
     qs = jb.Job.objects.values('sales_code').annotate(
-        count=Count('sales_code', distinct=True)).order_by('-count')
+        count=Count('sales_code')).order_by('-count')
     return {
         row['sales_code']: row['count']
         for row in qs
