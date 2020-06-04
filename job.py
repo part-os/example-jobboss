@@ -9,16 +9,15 @@ from paperless.objects.orders import Order, OrderComponent
 import jobboss.models as jb
 from jobboss.query.customer import get_or_create_customer, \
     get_or_create_contact, get_or_create_address
-from jobboss.query.job import get_material, get_work_center, \
-    get_default_work_center, AssemblySuffixCounter
+from jobboss.query.job import get_material, AssemblySuffixCounter
+from routing import generate_routing_lines
 
 
-def get_wc(name):
-    wc = get_work_center(name)
-    if wc is None:
-        return get_default_work_center()
-    else:
-        return wc
+def safe_round(f):
+    try:
+        return round(f, 2)
+    except TypeError:
+        return f
 
 
 def process_order(order: Order):
@@ -476,7 +475,8 @@ def process_order(order: Order):
                 operations_list = comp.shop_operations
                 if comp.is_root_component:
                     operations_list = operations_list + order_item.ordered_add_ons
-                for j, op in enumerate(operations_list):
+                j = -1
+                for op in operations_list:
                     runtime = 0
                     setup_time = 0
                     notes = None
@@ -484,95 +484,124 @@ def process_order(order: Order):
                         runtime = op.runtime if op.runtime is not None else 0
                         setup_time = op.setup_time if op.setup_time is not None else 0
                         notes = op.notes
-                    logger.debug('Creating operation {}'.format(j))
-                    job_op = jb.JobOperation(
-                        job=job,
-                        sequence=j,
-                        description=op.name[0:25] if op.name else op.name,
-                        priority=5,
-                        run_method='Min/Part',
-                        run=runtime * 60,
-                        est_run_per_part=runtime,
-                        efficiency_pct=100,
-                        attended_pct=100,
-                        queue_hrs=0,
-                        est_total_hrs=comp.make_quantity * runtime + setup_time,
-                        est_setup_hrs=setup_time,
-                        est_run_hrs=runtime * comp.make_quantity,
-                        est_setup_labor=0,
-                        est_run_labor=0,
-                        est_labor_burden=0,
-                        est_machine_burden=0,
-                        est_ga_burden=0,
-                        est_required_qty=comp.make_quantity,
-                        est_unit_cost=0,
-                        est_addl_cost=0,
-                        est_total_cost=0,
-                        deferred_qty=comp.make_quantity,
-                        act_setup_hrs=0,
-                        act_run_hrs=0,
-                        act_run_qty=0,
-                        act_scrap_qty=0,
-                        act_setup_labor=0,
-                        act_run_labor=0,
-                        act_labor_burden=0,
-                        act_machine_burden=0,
-                        act_ga_burden=0,
-                        act_unit_cost=0,
-                        act_addl_cost=0,
-                        act_total_cost=0,
-                        setup_pct_complete=0,
-                        run_pct_complete=0,
-                        rem_run_hrs=runtime * comp.make_quantity,
-                        rem_setup_hrs=setup_time,
-                        rem_total_hrs=comp.make_quantity * runtime + setup_time,
-                        overlap=0,
-                        overlap_qty=0,
-                        est_ovl_hrs=0,
-                        lead_days=0,
-                        schedule_exception_old=False,
-                        status='O',
-                        minimum_chg_amt=0,
-                        cost_unit_conv=0,
-                        currency_conv_rate=1,
-                        fixed_rate=True,
-                        rwk_quantity=0,
-                        rwk_setup_hrs=0,
-                        rwk_run_hrs=0,
-                        rwk_setup_labor=0,
-                        rwk_run_labor=0,
-                        rwk_labor_burden=0,
-                        rwk_machine_burden=0,
-                        rwk_ga_burden=0,
-                        rwk_scrap_qty=0,
-                        note_text=notes,
-                        last_updated=now,
-                        act_run_labor_hrs=0,
-                        setup_qty=0,
-                        run_qty=0,
-                        rwk_run_labor_hrs=0,
-                        rwk_setup_qty=0,
-                        rwk_run_qty=0,
-                        act_setup_labor_hrs=0,
-                        rwk_setup_labor_hrs=0,
-                        objectid=str(uuid.uuid4()),
-                        job_oid=job.objectid,
-                        sched_resources=1,
-                        lag_hours=0,
-                        manual_start_lock=False,
-                        manual_stop_lock=False,
-                        priority_zero_lock=False,
-                        firm_zone_lock=False,
-                    )
-                    job_op.inside_oper = True
-                    wc = get_wc(op.name)
-                    job_op.work_center = wc
-                    job_op.workcenter_oid = wc.objectid
-                    job_op.wc_vendor = job_op.work_center.work_center
-                    job_op.queue_hrs = job_op.work_center.queue_hrs
-                    job_op.save()
-                    logger.info('Saved operation {} {} {}'.format(
-                        j, job_op.work_center, job_op.vendor))
+                    routing_lines = list(generate_routing_lines(op.name))
+                    for k, routing_line in enumerate(routing_lines):
+                        j += 1
+                        logger.debug('Creating operation {}'.format(j))
+                        job_op = jb.JobOperation(
+                            job=job,
+                            sequence=j,
+                            description=op.name[0:25] if op.name else op.name,
+                            priority=5,
+                            run_method='Min/Part',
+                            run=runtime * 60,
+                            est_run_per_part=runtime,
+                            efficiency_pct=100,
+                            attended_pct=100,
+                            queue_hrs=0,
+                            est_total_hrs=comp.make_quantity * runtime + setup_time,
+                            est_setup_hrs=setup_time,
+                            est_run_hrs=runtime * comp.make_quantity,
+                            est_setup_labor=0,
+                            est_run_labor=0,
+                            est_labor_burden=0,
+                            est_machine_burden=0,
+                            est_ga_burden=0,
+                            est_required_qty=comp.make_quantity,
+                            est_unit_cost=0,
+                            est_addl_cost=0,
+                            est_total_cost=0,
+                            deferred_qty=comp.make_quantity,
+                            act_setup_hrs=0,
+                            act_run_hrs=0,
+                            act_run_qty=0,
+                            act_scrap_qty=0,
+                            act_setup_labor=0,
+                            act_run_labor=0,
+                            act_labor_burden=0,
+                            act_machine_burden=0,
+                            act_ga_burden=0,
+                            act_unit_cost=0,
+                            act_addl_cost=0,
+                            act_total_cost=0,
+                            setup_pct_complete=0,
+                            run_pct_complete=0,
+                            rem_run_hrs=runtime * comp.make_quantity,
+                            rem_setup_hrs=setup_time,
+                            rem_total_hrs=comp.make_quantity * runtime + setup_time,
+                            overlap=0,
+                            overlap_qty=0,
+                            est_ovl_hrs=0,
+                            lead_days=0,
+                            schedule_exception_old=False,
+                            status='O',
+                            minimum_chg_amt=0,
+                            cost_unit_conv=0,
+                            currency_conv_rate=1,
+                            fixed_rate=True,
+                            rwk_quantity=0,
+                            rwk_setup_hrs=0,
+                            rwk_run_hrs=0,
+                            rwk_setup_labor=0,
+                            rwk_run_labor=0,
+                            rwk_labor_burden=0,
+                            rwk_machine_burden=0,
+                            rwk_ga_burden=0,
+                            rwk_scrap_qty=0,
+                            note_text=notes,
+                            last_updated=now,
+                            act_run_labor_hrs=0,
+                            setup_qty=0,
+                            run_qty=0,
+                            rwk_run_labor_hrs=0,
+                            rwk_setup_qty=0,
+                            rwk_run_qty=0,
+                            act_setup_labor_hrs=0,
+                            rwk_setup_labor_hrs=0,
+                            objectid=str(uuid.uuid4()),
+                            job_oid=job.objectid,
+                            sched_resources=1,
+                            lag_hours=0,
+                            manual_start_lock=False,
+                            manual_stop_lock=False,
+                            priority_zero_lock=False,
+                            firm_zone_lock=False,
+                            sb_runmethod=None,
+                        )
+                        if not routing_line.is_inside:
+                            # outside service
+                            job_op.inside_oper = False
+                            job_op.vendor = routing_line.vendor_instance
+                            job_op.wc_vendor = routing_line.vendor_instance.vendor
+                            job_op.operation_service = routing_line.service[0:10] \
+                                if routing_line.service else routing_line.service
+                            job_op.cost_unit = 'ea'
+                            job_op.cost_unit_conv = 1
+                            job_op.trade_currency = 1
+                            job_op.trade_date = today
+                            if comp.deliver_quantity:
+                                job_op.est_unit_cost = safe_round(
+                                    op.cost.dollars / comp.deliver_quantity)
+                            job_op.est_total_cost = safe_round(op.cost.dollars)
+                            job_op.act_run_qty = comp.make_quantity
+                        else:
+                            # inside operation
+                            job_op.inside_oper = True
+                            job_op.work_center = routing_line.work_center_instance
+                            job_op.wc_vendor = routing_line.work_center_instance.work_center
+                            if routing_line.has_operation:
+                                job_op.operation_service = routing_line.operation[0:10]
+                                job_op.note_text = routing_line.operation_instance.note_text
+                            job_op.workcenter_oid = routing_line.work_center_instance.objectid
+                            job_op.queue_hrs = routing_line.work_center_instance.queue_hrs
+                        try:
+                            job_op.save()
+                        except:
+                            logger.error('Could not save operation')
+                            logger.error(job_op.__dict__)
+                            raise
+                        logger.info('Saved operation {} {} {}'.format(
+                            j, job_op.work_center, job_op.vendor))
 
         # add hardware items as MaterialReqs
         comp: OrderComponent
