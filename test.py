@@ -22,8 +22,9 @@ import json
 from django.db.models import F
 from paperless.client import PaperlessClient
 from paperless.objects.orders import Order
-
 common.configure(test_mode=True)
+from routing import generate_routing_lines, OP_MAP, FINISH_MAP, is_inside_op, \
+    is_outside_op, RoutingLine
 
 
 class ConnectorTest(unittest.TestCase):
@@ -61,6 +62,38 @@ class ConnectorTest(unittest.TestCase):
                 op_count += len(comp.shop_operations)
         addon_count = sum(len(oi.ordered_add_ons) for oi in order.order_items)
         self.assertEqual(op_count + addon_count, jb.JobOperation.objects.count())
+
+    def test_routing(self):
+        inside_name = 'Test Paperless Op'
+        outside_name = 'Anodizing'
+        OP_MAP[inside_name] = [['WC1', 'OP1']]
+        FINISH_MAP[outside_name] = [['VENDOR1', 'SERVICE1']]
+        lines = list(generate_routing_lines('No op'))
+        self.assertEqual(1, len(lines))
+        line: RoutingLine = lines[0]
+        self.assertTrue(line.is_inside)
+        self.assertEqual('No op', line.wc)
+        self.assertFalse(is_inside_op('No op'))
+        self.assertFalse(is_outside_op('No op'))
+        lines = list(generate_routing_lines(inside_name))
+        self.assertEqual(1, len(lines))
+        line: RoutingLine = lines[0]
+        self.assertTrue(line.is_inside)
+        self.assertEqual('WC1', line.wc)
+        self.assertTrue(is_inside_op(inside_name))
+        self.assertFalse(is_outside_op(inside_name))
+        lines = list(generate_routing_lines(outside_name))
+        self.assertEqual(1, len(lines))
+        line: RoutingLine = lines[0]
+        self.assertFalse(line.is_inside)
+        self.assertEqual('VENDOR1', line.vendor)
+        self.assertFalse(is_inside_op(outside_name))
+        self.assertTrue(is_outside_op(outside_name))
+        OP_MAP[inside_name] = []
+        lines = list(generate_routing_lines(inside_name))
+        self.assertEqual(0, len(lines))
+        OP_MAP.pop(inside_name)
+        FINISH_MAP.pop(outside_name)
 
 
 if __name__ == '__main__':

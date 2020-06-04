@@ -2,7 +2,11 @@ from jobboss.query.job import get_work_center, get_operation, get_vendor, \
     get_default_vendor, get_default_work_center
 
 OP_MAP = {}
-"""Example: "Saw": [["SAW", "SC"]]"""
+"""
+Example: "Saw": [["SAW", "SC"]]
+To not import an operation:
+"Fake operation": []
+"""
 
 FINISH_MAP = {}
 """Example: "Anodize MIL-A-8624": [["PLATECO", "An A-8624"]]"""
