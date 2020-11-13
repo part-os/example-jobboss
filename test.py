@@ -61,7 +61,7 @@ class ConnectorTest(unittest.TestCase):
             for comp in oi.components:
                 op_count += len(comp.shop_operations)
         addon_count = sum(len(oi.ordered_add_ons) for oi in order.order_items)
-        self.assertEqual(op_count + addon_count, jb.JobOperation.objects.count())
+        self.assertEqual(op_count, jb.JobOperation.objects.count())
 
     def test_routing(self):
         inside_name = 'Test Paperless Op'
@@ -94,7 +94,6 @@ class ConnectorTest(unittest.TestCase):
         self.assertEqual(0, len(lines))
         OP_MAP.pop(inside_name)
         FINISH_MAP.pop(outside_name)
-
 
 if __name__ == '__main__':
     from django.test.utils import setup_databases
