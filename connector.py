@@ -68,7 +68,7 @@ if __name__ == '__main__':
     elif args.compare_db_snapshots:
         if args.snapshot_file_path is None or args.old_snapshot_file_path is None:
             raise ValueError('Must supply both --snapshot_file_path and --old_snapshot_file_path when comparing snapshots.')
-        from joboss.utils.database_diff import compare_database_snapshots
+        from jobboss.utils.database_diff import compare_database_snapshots
         compare_database_snapshots(args.old_snapshot_file_path, args.snapshot_file_path)
     else:
         if common.PAPERLESS_CONFIG.active:
