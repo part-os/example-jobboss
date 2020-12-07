@@ -59,7 +59,7 @@ def process_order(order: Order):
     today = now.replace(hour=0, minute=0, second=0, microsecond=0)
 
     ship_str = order.shipping_option.summary(
-        order.ships_on_dt, order.payment_details.payment_type) if order.shipping is not None else ''
+        order.ships_on_dt, order.payment_details.payment_type) if order.shipping_option is not None else ''
 
     terms = order.payment_details.payment_terms.upper() \
                 if order.payment_details.payment_type == 'purchase_order' \
