@@ -39,21 +39,27 @@ def process_order(order: Order):
                                         order.customer.first_name)
         code = None
     customer: jb.Customer = get_or_create_customer(business_name, code)
-    bill_name = '{} {}'.format(order.billing_info.first_name,
-                               order.billing_info.last_name)
+    bill_name = '{} {}'.format(order.billing_info.first_name if order.billing_info is not None else order.customer.first_name,
+                               order.billing_info.last_name if order.billing_info is not None else order.customer.last_name)
     contact: jb.Contact = get_or_create_contact(customer, bill_name)
-    bill_to: jb.Address = get_or_create_address(
-        customer,
-        attr.asdict(order.billing_info),
-        is_shipping=False
-    )
+    if order.billing_info:
+        bill_to: jb.Address = get_or_create_address(
+            customer,
+            attr.asdict(order.billing_info),
+            is_shipping=False
+        )
+    else:
+        bill_to: jb.Address = get_default_billing_address(customer)
     contact.address = bill_to.address
     contact.save()
-    ship_to: jb.Address = get_or_create_address(
-        customer,
-        attr.asdict(order.shipping_info),
-        is_shipping=True
-    )
+    if order.shipping_info:
+        ship_to: jb.Address = get_or_create_address(
+            customer,
+            attr.asdict(order.shipping_info),
+            is_shipping=True
+        )
+    else:
+        ship_to: jb.Address = get_default_shipping_address(customer)
 
     now = datetime.datetime.now()
     today = now.replace(hour=0, minute=0, second=0, microsecond=0)
