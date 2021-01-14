@@ -65,7 +65,7 @@ def process_order(order: Order):
     today = now.replace(hour=0, minute=0, second=0, microsecond=0)
 
     ship_str = order.shipping_option.summary(
-        order.ships_on_dt, order.payment_details.payment_type)
+        order.ships_on_dt, order.payment_details.payment_type) if order.shipping_option is not None else ''
 
     terms = order.payment_details.payment_terms.upper() \
                 if order.payment_details.payment_type == 'purchase_order' \
@@ -95,7 +95,7 @@ def process_order(order: Order):
         sales_tax_rate=0,
         order_date=today,
         promised_date=order.ships_on_dt,
-        customer_po=order.payment_details.purchase_order_number,
+        customer_po=order.payment_details.purchase_order_number[:20] if order.payment_details.purchase_order_number is not None else None,
         status='Open',
         total_price=order.payment_details.total_price.dollars,
         currency_conv_rate=1,
@@ -280,7 +280,7 @@ def process_order(order: Order):
                 fixed_rate=True,
                 trade_date=today,
                 commission_pct=commission_pct,
-                customer_po=order.payment_details.purchase_order_number,
+                customer_po=order.payment_details.purchase_order_number[:20] if order.payment_details.purchase_order_number is not None else None,
                 customer_po_ln=None,
                 quantity_per=1,
                 profit_pct=0,
