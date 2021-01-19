@@ -8,7 +8,7 @@ from paperless.objects.components import Operation
 from paperless.objects.orders import Order, OrderComponent
 import jobboss.models as jb
 from jobboss.query.customer import get_or_create_customer, \
-    get_or_create_contact, get_or_create_address
+    get_or_create_contact, get_or_create_address, get_default_billing_address, get_default_shipping_address
 from jobboss.query.job import get_material, AssemblySuffixCounter
 from routing import generate_routing_lines
 
