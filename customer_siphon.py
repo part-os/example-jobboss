@@ -108,7 +108,7 @@ def import_customers():
         count += 1
         if email is not None and first_name is not None and last_name is not None:
             pp_contact = PPContact(
-                account_id=count,
+                account_id=None,
                 email=email,
                 first_name=first_name,
                 last_name=last_name,
