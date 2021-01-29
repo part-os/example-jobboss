@@ -4,7 +4,7 @@ import uuid
 from itertools import chain
 from common import logger
 import common
-from paperless.objects.components import Operation
+from paperless.objects.components import BaseOperation
 from paperless.objects.orders import Order, OrderComponent
 import jobboss.models as jb
 from jobboss.query.customer import get_or_create_customer, \
@@ -486,7 +486,7 @@ def process_order(order: Order):
                     runtime = 0
                     setup_time = 0
                     notes = None
-                    if isinstance(op, Operation):
+                    if isinstance(op, BaseOperation):
                         runtime = op.runtime if op.runtime is not None else 0
                         setup_time = op.setup_time if op.setup_time is not None else 0
                         notes = op.notes
