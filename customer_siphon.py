@@ -49,14 +49,20 @@ def import_customers():
         tax_exempt = False  # No tax exemption options on Customers in jb
         tax_rate = None  # No tax rate field on Customers in jb
         url = customer.url
+        print(
+            f'Business name: {business_name}'
+            f'ERP Code: {erp_code}'
+            f'credit_line: {credit_line}'
+            f'notes: {notes}'
+        )
 
         pp_account = PPAccount(
             business_name=business_name,
             credit_line=credit_line,
             erp_code=erp_code,
             notes=notes,
-            # payment_terms=payment_terms,
-            # payment_terms_period=payment_terms_period,
+            payment_terms=None,
+            payment_terms_period=None,
             phone=phone,
             phone_ext=phone_ext,
             purchase_orders_enabled=purchase_orders_enabled,
