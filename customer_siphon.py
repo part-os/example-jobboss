@@ -99,7 +99,7 @@ def import_customers():
 
 
     for contact in jb_contacts:
-        email = contact.email
+        email = contact.email_address
         first_name, last_name = parse_names(contact.contact_name)
         # address = get_jb_address(contact.address)
         # notes =,
@@ -125,9 +125,6 @@ def import_customers():
                 logger.info(f'Encountered an error importing account: {pp_contact.email} - skipping.')
                 pp_account_created = False
                 account_creation_errors.append(f'{pp_contact.email} | {str(e)}')
-
-            if pp_account_created:
-                print(erp_code_to_pp_account_mapping)
 
     write_errors_to_file('account_creation_errors.txt', account_creation_errors)
 
