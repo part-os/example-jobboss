@@ -94,8 +94,8 @@ def import_customers():
             pp_account_created = False
             account_creation_errors.append(f'{erp_code} | {str(e)}')
 
-        if pp_account_created:
-            print(erp_code_to_pp_account_mapping)
+        # if pp_account_created:
+            # print(erp_code_to_pp_account_mapping)
 
     count = 0
     for contact in jb_contacts:
@@ -109,7 +109,7 @@ def import_customers():
         if not email or not first_name or not last_name:
             pp_contact = PPContact(
                 account_id=count,
-                email=None,
+                email=email,
                 first_name=first_name,
                 last_name=last_name,
                 # address=,
