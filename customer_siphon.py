@@ -5,16 +5,18 @@ from common import logger
 
 
 def get_payment_terms_period(terms):
-    if '30' in terms:
-        return 30
-    elif '45' in terms:
-        return 45
-    elif '60' in terms:
-        return 60
-    elif '90' in terms:
-        return 90
-    else:
-        return 0
+    if terms is not None:
+        if '30' in terms:
+            return 30
+        elif '45' in terms:
+            return 45
+        elif '60' in terms:
+            return 60
+        elif '90' in terms:
+            return 90
+        else:
+            return 0
+    return 0
 
 
 def import_customers():
