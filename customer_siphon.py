@@ -1,5 +1,6 @@
 import jobboss.models as jb
-from paperless.objects.customers import (Account as PPAccount, Contact as PPContact)
+from paperless.objects.customers import (Account as PPAccount, Contact as PPContact, AccountList as PPAccountList,
+                                         ContactList as PPContactList)
 from common import logger
 
 
@@ -103,7 +104,7 @@ def delete_all_accounts_and_contacts():
     for i, brief_account in enumerate(accounts_list):
         if i % 50 == 0:
             logger.info(f'Deleting account {i+1}/{num_accounts}')
-        account = PPAccount(id=brief_account.id, business_name=brief_account.business_name)
+        account = PPAccount(id=brief_account.id, name=brief_account.business_name)
         account.delete()
 
     # Get a list of all the remaining contacts
@@ -117,7 +118,7 @@ def delete_all_accounts_and_contacts():
             logger.info(f'Deleting contact {i+1}/{num_contacts}')
         contact = PPContact(
             id=brief_contact.id,
-            company_id=brief_contact.company_id,
+            account_id=brief_contact.company_id,
             email=brief_contact.email,
             first_name=brief_contact.first_name,
             last_name=brief_contact.last_name
