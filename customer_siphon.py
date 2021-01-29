@@ -84,6 +84,14 @@ def import_customers():
         if pp_account_created:
             print(pp_account)
 
+    write_errors_to_file('account_creation_errors.txt', account_creation_errors)
+
+
+def write_errors_to_file(file_path, error_identifiers):
+    with open(file_path, 'w') as f:
+        for error_identifier in error_identifiers:
+            f.write(f'{error_identifier}\n')
+
 
 def delete_all_accounts_and_contacts():
     # Get a list of all the Paperless Parts accounts
