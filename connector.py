@@ -6,8 +6,11 @@ from paperless.client import PaperlessClient
 from paperless.listeners import OrderListener
 from paperless.main import PaperlessSDK
 from paperless.objects.orders import Order
+
 common.configure()
 from job import process_order
+
+from customer_siphon import siphon_customers, delete_all_accounts_and_contacts
 
 
 class MyOrderListener(OrderListener):
@@ -31,6 +34,9 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--order_num')
     parser.add_argument('--test', action='store_true')
+    parser.add_argument('--import_customers', action='store_true', help='Import the Contact and CustomerCode tables '
+                                                                        'from E2 into Paperless Parts')
+    parser.add_argument('--delete_all_customer_data', action='store_true', help='Delete all existing accounts and contacts from Paperless Parts. Must be used in conjunction with --import_customers')
     parser.add_argument('--create_db_snapshot', action='store_true')
     parser.add_argument('--compare_db_snapshots', action='store_true')
     parser.add_argument('--snapshot_file_path', default=None, type=str,
