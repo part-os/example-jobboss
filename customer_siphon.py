@@ -106,7 +106,7 @@ def import_customers():
         # phone =,
         # phone_ext =,
         count += 1
-        if not email or not first_name or not last_name:
+        if email is not None and first_name is not None and last_name is not None:
             pp_contact = PPContact(
                 account_id=count,
                 email=email,
