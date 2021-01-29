@@ -26,7 +26,11 @@ def parse_names(full_name):
     if len(names_array) == 1:
         return full_name, None
     elif len(names_array) > 1:
-        return names_array[0], names_array[1:]
+        first_name = names_array[0]
+        last_name = names_array[1:]
+        if len(last_name) > 1:
+            last_name = ' '.join(last_name)
+        return first_name, last_name
     return None, None
 
 
