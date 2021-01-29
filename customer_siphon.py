@@ -153,6 +153,7 @@ def delete_all_accounts_and_contacts():
         if i % 50 == 0:
             logger.info(f'Deleting account {i+1}/{num_accounts}')
         account = PPAccount(id=brief_account.id, name=brief_account.name)
+        print(f'Account to be deleted: {account}')
         account.delete()
 
     # Get a list of all the remaining contacts
