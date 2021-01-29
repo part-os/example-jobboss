@@ -10,7 +10,7 @@ from paperless.objects.orders import Order
 common.configure()
 from job import process_order
 
-from customer_siphon import siphon_customers, delete_all_accounts_and_contacts
+from customer_siphon import import_customers, delete_all_accounts_and_contacts
 
 
 class MyOrderListener(OrderListener):
@@ -35,7 +35,7 @@ if __name__ == '__main__':
     parser.add_argument('--order_num')
     parser.add_argument('--test', action='store_true')
     parser.add_argument('--import_customers', action='store_true', help='Import the Contact and CustomerCode tables '
-                                                                        'from E2 into Paperless Parts')
+                                                                        'from jobboss into Paperless Parts')
     parser.add_argument('--delete_all_customer_data', action='store_true', help='Delete all existing accounts and contacts from Paperless Parts. Must be used in conjunction with --import_customers')
     parser.add_argument('--create_db_snapshot', action='store_true')
     parser.add_argument('--compare_db_snapshots', action='store_true')
@@ -62,6 +62,28 @@ if __name__ == '__main__':
         from jobboss.models import Job
         c = Job.objects.count()
         print('Job count: {} OK!'.format(c))
+    elif args.import_customers:
+        print('Importing customers from jobboss to Paperless Parts')
+        PaperlessClient(
+            access_token=common.PAPERLESS_CONFIG.token,
+            group_slug=common.PAPERLESS_CONFIG.slug
+        )
+        if args.delete_all_customer_data:
+            # Verify action before deleting customer data from Paperless Parts account
+            proceed = input(
+                'Are you sure you want to proceed? This action will DELETE ALL CONTACT AND CUSTOMER RECORDS from the Paperless Parts account. Enter Y or N and press enter: ')
+            definitely_proceed = input(
+                'Please confirm again that you wish to DELETE ALL CONTACT AND CUSTOMER RECORDS from the Paperless Parts account. Enter YES or NO and press enter: ')
+            if proceed.lower() == 'y' and definitely_proceed.lower() == 'yes':
+                delete_all_accounts_and_contacts()
+        else:
+            # Verify action before writing customer data to Paperless Parts account
+            proceed = input(
+                'Are you sure you want to proceed? This action will write new records to the Paperless Parts account. Enter Y or N and press enter: ')
+            if proceed.lower() == 'y':
+                import_customers()
+            else:
+                print('Exiting')
     elif args.create_db_snapshot:
         if args.snapshot_file_path is None:
             now = datetime.now().strftime('%Y.%m.%d.%H.%M.%S')
