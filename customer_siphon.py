@@ -107,6 +107,7 @@ def import_customers():
         # phone_ext =,
         count += 1
         if email is not None and first_name is not None and last_name is not None:
+            print(f'Functional contact: {email}')
             pp_contact = PPContact(
                 account_id=None,
                 email=email,
