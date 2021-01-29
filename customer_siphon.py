@@ -1,6 +1,5 @@
 import jobboss.models as jb
-from paperless.objects.customers import (Company as PPAccount, Customer as PPContact, AddressInfo as PPAddressInfo,
-                                         CompanyList as PPAccountList, CustomerList as PPContactList)
+from paperless.objects.customers import (Account as PPAccount, Contact as PPContact)
 from common import logger
 
 
@@ -57,7 +56,7 @@ def import_customers():
         )
 
         pp_account = PPAccount(
-            business_name=business_name,
+            name=business_name,
             credit_line=credit_line,
             erp_code=erp_code,
             notes=notes,
