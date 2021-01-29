@@ -19,6 +19,24 @@ def get_payment_terms_period(terms):
     return 0
 
 
+def parse_names(full_name):
+    names_array = []
+    if full_name:
+        names_array = full_name.split()
+    if len(names_array) == 1:
+        return full_name, None
+    elif len(names_array) > 1:
+        return full_name[0], full_name[1:]
+    return None, None
+
+def get_jb_address(address_code):
+    addr_obj = jb.Address.objects.filter(address=address_code).last()
+    # TODO Build out address record first and then associate it with the contact
+    if addr_obj:
+        full_address = f'{addr_obj.line1} {addr_obj.line2} {addr_obj.state}'
+    return None
+
+
 def import_customers():
 
     jb_customers = jb.Customer.objects.all()[0:10]
@@ -28,6 +46,7 @@ def import_customers():
     logger.info(f'Found {len(jb_contacts)} customers in the Contact table.')
 
     accounts_created = 0
+    contacts_created = 0
     erp_code_to_pp_account_mapping = {}
     account_creation_errors = []
 
@@ -49,20 +68,14 @@ def import_customers():
         tax_exempt = False  # No tax exemption options on Customers in jb
         tax_rate = None  # No tax rate field on Customers in jb
         url = customer.url
-        print(
-            f'Business name: {business_name}'
-            f'ERP Code: {erp_code}'
-            f'credit_line: {credit_line}'
-            f'notes: {notes}'
-        )
 
         pp_account = PPAccount(
             name=business_name,
             credit_line=credit_line,
             erp_code=erp_code,
             notes=notes,
-            payment_terms=None,
-            payment_terms_period=None,
+            payment_terms=payment_terms,
+            payment_terms_period=payment_terms_period,
             phone=phone,
             phone_ext=phone_ext,
             purchase_orders_enabled=purchase_orders_enabled,
@@ -82,7 +95,39 @@ def import_customers():
             account_creation_errors.append(f'{erp_code} | {str(e)}')
 
         if pp_account_created:
-            print(pp_account)
+            print(erp_code_to_pp_account_mapping)
+
+
+    for contact in jb_contacts:
+        email = contact.email
+        first_name, last_name = parse_names(contact.contact_name)
+        # address = get_jb_address(contact.address)
+        # notes =,
+        # phone =,
+        # phone_ext =,
+
+        if not email or not first_name or not last_name:
+            pp_contact = PPContact(
+                email=None,
+                first_name=first_name,
+                last_name=last_name,
+                # address=,
+                # notes=,
+                # phone=,
+                # phone_ext=,
+            )
+
+            try:
+                pp_contact.create()
+                contacts_created += 1
+                pp_account_created = True
+            except Exception as e:
+                logger.info(f'Encountered an error importing account: {pp_contact.email} - skipping.')
+                pp_account_created = False
+                account_creation_errors.append(f'{pp_contact.email} | {str(e)}')
+
+            if pp_account_created:
+                print(erp_code_to_pp_account_mapping)
 
     write_errors_to_file('account_creation_errors.txt', account_creation_errors)
 
@@ -118,7 +163,7 @@ def delete_all_accounts_and_contacts():
             logger.info(f'Deleting contact {i+1}/{num_contacts}')
         contact = PPContact(
             id=brief_contact.id,
-            account_id=brief_contact.company_id,
+            account_id=brief_contact.account_id,
             email=brief_contact.email,
             first_name=brief_contact.first_name,
             last_name=brief_contact.last_name
