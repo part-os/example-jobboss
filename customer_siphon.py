@@ -45,7 +45,7 @@ def import_customers():
     jb_customers = jb.Customer.objects.all()[0:10]
     logger.info(f'Found {len(jb_customers)} customers in the Customer table.')
 
-    jb_contacts = jb.Contact.objects.all()[0:10]
+    jb_contacts = jb.Contact.objects.all()[0:50]
     logger.info(f'Found {len(jb_contacts)} customers in the Contact table.')
 
     accounts_created = 0
