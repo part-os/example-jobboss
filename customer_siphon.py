@@ -26,7 +26,7 @@ def parse_names(full_name):
     if len(names_array) == 1:
         return full_name, None
     elif len(names_array) > 1:
-        return full_name[0], full_name[1:]
+        return names_array[0], names_array[1:]
     return None, None
 
 def get_jb_address(address_code):
