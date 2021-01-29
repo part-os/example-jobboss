@@ -54,8 +54,7 @@ def get_all_data():
     return jb_customers, jb_contacts, jb_addresses
 
 
-def create_pp_accounts(jb_customers):
-    erp_code_to_pp_account_mapping = {}
+def create_pp_accounts(jb_customers, erp_code_to_pp_account_mapping):
     accounts_created = 0
     account_creation_errors = []
 
@@ -105,24 +104,28 @@ def create_pp_accounts(jb_customers):
         # if pp_account_created:
         # print(erp_code_to_pp_account_mapping)
     write_errors_to_file('account_creation_errors.txt', account_creation_errors)
+    return erp_code_to_pp_account_mapping
 
 
-def create_pp_contacts(jb_contacts):
+def create_pp_contacts(jb_contacts, erp_code_to_pp_account_mapping):
     contact_creation_errors = []
     contacts_created = 0
-    count = 0
     for contact in jb_contacts:
+        pp_account_id = None
         email = contact.email_address
         first_name, last_name = parse_names(contact.contact_name)
         # address = get_jb_address(contact.address)
         # notes =,
         # phone =,
         # phone_ext =,
-        count += 1
+        if contact.customer:
+            pp_account = erp_code_to_pp_account_mapping.get(contact.customer)
+            pp_account_id = pp_account.id if pp_account is not None else None
+
         if email is not None and first_name is not None and last_name is not None:
             print(f'Functional contact: {email}, first name: {first_name}, last name: {last_name}')
             pp_contact = PPContact(
-                account_id=None,
+                account_id=pp_account_id,
                 email=email,
                 first_name=first_name,
                 last_name=last_name,
@@ -144,18 +147,26 @@ def create_pp_contacts(jb_contacts):
     write_errors_to_file('contact_creation_errors.txt', contact_creation_errors)
 
 
+def create_pp_addresses(jb_addresses, erp_code_to_pp_account_mapping):
+    pass
+
+
 def import_customers():
-    enable_accounts = False
-    enable_contacts = True
+    enable_accounts = True
     enable_addresses = False
+    enable_contacts = True
+    erp_code_to_pp_account_mapping = {}
 
     jb_customers, jb_contacts, jb_addresses = get_all_data()
     # Iterate through customers and parse information into Paperless Account format
     if enable_accounts:
-        create_pp_accounts(jb_customers)
+        erp_code_to_pp_account_mapping = create_pp_accounts(jb_customers, erp_code_to_pp_account_mapping)
 
     if enable_contacts:
-        create_pp_contacts(jb_contacts)
+        create_pp_contacts(jb_contacts, erp_code_to_pp_account_mapping)
+
+    if enable_addresses:
+        create_pp_addresses(jb_addresses, erp_code_to_pp_account_mapping)
 
 
 def write_errors_to_file(file_path, error_identifiers):
